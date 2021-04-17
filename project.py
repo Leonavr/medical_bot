@@ -57,7 +57,7 @@ def step_reg_4 (message):
 #/start
 @bot.message_handler(commands = ['start'])
 def welcome (message):
-	sti = open(r'C:\Project\Project_files\AnimatedSticker.tgs','rb')
+	sti = open(r'C:\Project\medical_bot\Project_files\AnimatedSticker.tgs','rb')
 	bot.send_sticker(message.chat.id, sti)
 	a = telebot.types.ReplyKeyboardRemove()
 	bot.send_message(message.chat.id, "Вітаю, {0.first_name}!\nЯ - <b>{1.first_name}</b>, постараюсь домогти Вам! Щоб розпочати роботу достатньо всього лиш привітатись".format(message.from_user, bot.get_me()), reply_markup=a)
@@ -105,7 +105,7 @@ def provider_step_1(message):
 
 #Гілка Лікаря
 def provider_step(message):
-	sti = open(r'C:\Project\Project_files\AnimatedSticker1.tgs','rb')
+	sti = open(r'C:\Project\medical_bot\Project_files\AnimatedSticker1.tgs','rb')
 	bot.send_sticker(message.chat.id, sti)
 	if message.text == '14':
 		markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=False)
@@ -126,49 +126,49 @@ def provider_step(message):
 #Інформація по патологіям
 def patology(message):
 	if message.text == 'Гострий апендицит':
-		doc = open(r'C:\Project\Project_files\ГА.txt', 'r',encoding = 'utf-8')
+		doc = open(r'C:\Project\medical_bot\Project_files\ГА.txt', 'r',encoding = 'utf-8')
 		doc1 = doc.read()
 		doc.close
 		bot.send_message(message.chat.id, doc1)
 		bot.register_next_step_handler(message,patology)
 	elif message.text == 'Гострий панкреатит':
-		doc = open(r'C:\Project\Project_files\ГП.txt', 'r',encoding = 'utf-8')
+		doc = open(r'C:\Project\medical_bot\Project_files\ГП.txt', 'r',encoding = 'utf-8')
 		doc1 = doc.read()
 		doc.close
 		bot.send_message(message.chat.id, doc1)
 		bot.register_next_step_handler(message,patology)
 	elif message.text == 'Гострий холецистит':
-		doc = open(r'C:\Project\Project_files\ГХ.txt', 'r',encoding = 'utf-8')
+		doc = open(r'C:\Project\medical_bot\Project_files\ГХ.txt', 'r',encoding = 'utf-8')
 		doc1 = doc.read()
 		doc.close
 		bot.send_message(message.chat.id, doc1)
 		bot.register_next_step_handler(message,patology)
 	elif message.text == 'Гостра кишкова непрохідність':
-		doc = open(r'C:\Project\Project_files\ГКН.txt', 'r',encoding = 'utf-8')
+		doc = open(r'C:\Project\medical_bot\Project_files\ГКН.txt', 'r',encoding = 'utf-8')
 		doc1 = doc.read()
 		doc.close
 		bot.send_message(message.chat.id, doc1)
 		bot.register_next_step_handler(message,patology)
 	elif message.text == 'Защемлена грижа':
-		doc = open(r'C:\Project\Project_files\ЗГ.txt', 'r',encoding = 'utf-8')
+		doc = open(r'C:\Project\medical_bot\Project_files\ЗГ.txt', 'r',encoding = 'utf-8')
 		doc1 = doc.read()
 		doc.close
 		bot.send_message(message.chat.id, doc1)
 		bot.register_next_step_handler(message,patology)
 	elif message.text == 'Перфоративна виразка шлунка':
-		doc = open(r'C:\Project\Project_files\ПВ.txt', 'r',encoding = 'utf-8')
+		doc = open(r'C:\Project\medical_bot\Project_files\ПВ.txt', 'r',encoding = 'utf-8')
 		doc1 = doc.read()
 		doc.close
 		bot.send_message(message.chat.id, doc1)
 		bot.register_next_step_handler(message,patology)
 	elif message.text == 'Шлунково-кишкова кровотеча':
-		doc = open(r'C:\Project\Project_files\ШКК.txt', 'r',encoding = 'utf-8')
+		doc = open(r'C:\Project\medical_bot\Project_files\ШКК.txt', 'r',encoding = 'utf-8')
 		doc1 = doc.read()
 		doc.close
 		bot.send_message(message.chat.id, doc1)
 		bot.register_next_step_handler(message,patology)
 	elif message.text == 'Політравма':
-		doc = open(r'C:\Project\Project_files\ПТР.txt', 'rb')
+		doc = open(r'C:\Project\medical_bot\Project_files\ПТР.txt', 'rb')
 		bot.send_document(message.chat.id, doc)
 		bot.register_next_step_handler(message,patology)
 
