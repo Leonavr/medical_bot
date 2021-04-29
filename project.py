@@ -27,13 +27,16 @@ bot = telebot.TeleBot('1745020237:AAGYnbRhHf8ZnImx1nYqyHq8j0hkELADuno', parse_mo
 now = datetime.now()
 current_time = now.strftime("%H:%M:%S")
 print("Current Time =", current_time)
+
 @bot.message_handler(func=lambda message: False)
 def test_send_message():
-    text = 'CI Test Message'
+    text = 'Доброго ранку, як Ви себе почуваєте?'
     bot.send_message(dbase.user_id('Пацієнт'), text)
-if current_time=='11:50:00':
-    test_send_message()
 
+schedule.every().day.at("12:37").do(test_send_message)
+while True:
+    schedule.run_pending()
+    time.sleep(1)
 
 #/reg - реєстрація користувача в базі даних
 @bot.message_handler(commands = ['reg'])
