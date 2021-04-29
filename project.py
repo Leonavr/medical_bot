@@ -28,16 +28,6 @@ now = datetime.now()
 current_time = now.strftime("%H:%M:%S")
 print("Current Time =", current_time)
 
-@bot.message_handler(func=lambda message: False)
-def test_send_message():
-    text = 'Доброго ранку, як Ви себе почуваєте?'
-    bot.send_message(dbase.user_id('Пацієнт'), text)
-
-schedule.every().day.at("12:37").do(test_send_message)
-while True:
-    schedule.run_pending()
-    time.sleep(1)
-
 #/reg - реєстрація користувача в базі даних
 @bot.message_handler(commands = ['reg'])
 def registr (message):
@@ -238,5 +228,15 @@ def vomiting(message):
 	if message.text in ["Одноразова, приносить полегшення", "Одноразова, не приносить полегшення", "Багаторазова, не приносить полегшення"]:
 		bot.send_message(message.chat.id, '1. Прийміть спазмолітик, метоклопрамід;\n2. Сконтактуйте з сімейним лікарем;\n3. Показані УЗД ОЧП, ФГДС')
 
+'''@bot.message_handler(content_types=['text'])
+def test_send_message():
+	text = 'Доброго ранку, як Ви себе почуваєте?'
+	bot.send_message(dbase.user_id('Пацієнт'), text)
+
+schedule.every().day.at("14:26").do(test_send_message)
+while True:
+	schedule.run_pending()
+	time.sleep(1)'''
+	
 bot.polling(none_stop=True, interval=0)
 
