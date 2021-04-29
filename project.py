@@ -4,6 +4,11 @@ import logging
 from telebot import types
 from db import SQLighter
 import json
+import schedule
+import time
+import config
+from datetime import datetime
+
 
 with open("intents.json", "r", encoding = 'utf-8') as read_file:
     data = json.load(read_file)
@@ -19,6 +24,17 @@ dbase = SQLighter('db1.db')
 #Config
 bot = telebot.TeleBot('1745020237:AAGYnbRhHf8ZnImx1nYqyHq8j0hkELADuno', parse_mode='html')
 
+now = datetime.now()
+current_time = now.strftime("%H:%M:%S")
+print("Current Time =", current_time)
+@bot.message_handler(func=lambda message: False)
+def test_send_message():
+    text = 'CI Test Message'
+    bot.send_message(dbase.user_id('Пацієнт'), text)
+if current_time=='11:50:00':
+    test_send_message()
+
+
 #/reg - реєстрація користувача в базі даних
 @bot.message_handler(commands = ['reg'])
 def registr (message):
@@ -26,7 +42,7 @@ def registr (message):
 	item1 = types.KeyboardButton("Зареєстрований")
 	item2 = types.KeyboardButton("Зареєструватись")
 	markup.add(item1,item2)
-	bot.send_message(message.chat.id, "Вітаю, {0.first_name}!\nВи можете зареєструватись для отримання інформації з бази даних!".format(message.from_user, bot.get_me()), reply_markup = markup)
+	bot.send_message(message.chat.id, "Вітаю, {0.first_name}!\nВи можете зареєструватись для отримання інформації з бази даних!".format(message.from_user), reply_markup = markup)
 	bot.register_next_step_handler(message,step_reg_1)
 
 def step_reg_1 (message):
@@ -86,6 +102,7 @@ def get_text_messages(message):
 		bot.send_message(message.from_user.id, random.choice(data['Responses']['Goodbye_bot']))
 	elif message.text in data['Corpus']['Gratitude']:
 		bot.send_message(message.from_user.id, random.choice(data['Responses']['Gratitude_bot']))
+
 
 #Крок після визначення ролі
 def process_step(message):
@@ -219,3 +236,4 @@ def vomiting(message):
 		bot.send_message(message.chat.id, '1. Прийміть спазмолітик, метоклопрамід;\n2. Сконтактуйте з сімейним лікарем;\n3. Показані УЗД ОЧП, ФГДС')
 
 bot.polling(none_stop=True, interval=0)
+
