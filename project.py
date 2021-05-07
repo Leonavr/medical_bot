@@ -1,13 +1,12 @@
 import telebot
+from telebot import types
 import random
 import logging
-from telebot import types
 from db import SQLighter
 import json
-import schedule
-import time
-import config
-from datetime import datetime
+'''import schedule
+import time'''
+
 
 
 with open("intents.json", "r", encoding = 'utf-8') as read_file:
@@ -21,12 +20,8 @@ logger.basicConfig(filename='history.log', level=logging.DEBUG, encoding='utf-8'
 #DB
 dbase = SQLighter('db1.db')
 
-#Config
-bot = telebot.TeleBot('1745020237:AAGYnbRhHf8ZnImx1nYqyHq8j0hkELADuno', parse_mode='html')
 
-now = datetime.now()
-current_time = now.strftime("%H:%M:%S")
-print("Current Time =", current_time)
+bot = telebot.TeleBot('1745020237:AAGYnbRhHf8ZnImx1nYqyHq8j0hkELADuno', parse_mode='html')
 
 #/reg - реєстрація користувача в базі даних
 @bot.message_handler(commands = ['reg'])
@@ -237,6 +232,7 @@ schedule.every().day.at("14:26").do(test_send_message)
 while True:
 	schedule.run_pending()
 	time.sleep(1)'''
-	
-bot.polling(none_stop=True, interval=0)
+
+if __name__ == '__main__':
+	bot.polling(none_stop=True, interval=0)
 
