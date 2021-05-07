@@ -35,6 +35,9 @@ class SQLighter:
         result = self.cursor.execute("SELECT password FROM user_message WHERE user_id = ?", (user_id, )).fetchall()
         password = result[0][0]
         return password
-
+    def user_id(self, role:str):
+        a = self.cursor.execute("SELECT user_id FROM user_message WHERE role = ?", (role, )).fetchall()
+        res = a[0][0]
+        return res
     def close(self):
         self.connection.close()
