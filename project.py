@@ -1,11 +1,13 @@
+from typing import Text
 import telebot
 from telebot import types
 import random
 import logging
 from db import SQLighter
 import json
-'''import schedule
-import time'''
+import schedule
+import time
+from multiprocessing import *
 
 
 
@@ -90,7 +92,27 @@ def get_text_messages(message):
 		bot.send_message(message.from_user.id, random.choice(data['Responses']['Goodbye_bot']))
 	elif message.text in data['Corpus']['Gratitude']:
 		bot.send_message(message.from_user.id, random.choice(data['Responses']['Gratitude_bot']))
-
+	if message.text == 'Добре':
+		bot.send_message(message.from_user.id, 'Радий це чути, зустрінемось наступного дня')
+	elif message.text == 'Погано':
+		markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+		item1 = types.KeyboardButton("Так")
+		item2 = types.KeyboardButton("Ні")
+		markup.add(item1,item2)
+		bot.send_message(message.from_user.id, 'Бажаєте пройти опитувальник?', reply_markup = markup)
+		bot.register_next_step_handler(message,questions)
+#Опитувальник
+def questions(message):
+	if message.text == 'Так':
+		markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+		item1 = types.KeyboardButton("Біль в животі")
+		item2 = types.KeyboardButton("Блювота")
+		item3 = types.KeyboardButton("Лихоманка")
+		markup.add(item1,item2,item3)
+		bot.send_message(message.chat.id, 'Що вас турбує?',reply_markup = markup)
+		bot.register_next_step_handler(message,symptoms)
+	elif message.text == 'Ні':
+		bot.send_message(message.chat.id, "Не зволікайте своїм здоров'ям, при наявності симптомів зверніться до лікаря!")
 
 #Крок після визначення ролі
 def process_step(message):
@@ -222,17 +244,29 @@ def aches(message):
 def vomiting(message):
 	if message.text in ["Одноразова, приносить полегшення", "Одноразова, не приносить полегшення", "Багаторазова, не приносить полегшення"]:
 		bot.send_message(message.chat.id, '1. Прийміть спазмолітик, метоклопрамід;\n2. Сконтактуйте з сімейним лікарем;\n3. Показані УЗД ОЧП, ФГДС')
+def start_process():
+	p1 = Process(target = P_schedule.start_schedule, args =()).start()
 
-'''@bot.message_handler(content_types=['text'])
+class P_schedule():
+	def start_schedule():
+		schedule.every().day.at("10:27").do(test_send_message)
+
+		while True:
+			schedule.run_pending()
+			time.sleep(1)
+
+
 def test_send_message():
 	text = 'Доброго ранку, як Ви себе почуваєте?'
 	bot.send_message(dbase.user_id('Пацієнт'), text)
-
-schedule.every().day.at("14:26").do(test_send_message)
-while True:
-	schedule.run_pending()
-	time.sleep(1)'''
+	
 
 if __name__ == '__main__':
-	bot.polling(none_stop=True, interval=0)
+	start_process()
+	try:
+		bot.polling(none_stop=True, interval=0)
+	except:
+		pass
+
+
 
