@@ -58,7 +58,7 @@ def step_reg_3 (message):
 
 def step_reg_4 (message):
 	dbase.add_password(message.text)
-	bot.send_message(message.from_user.id, "Ви зареєструвались")
+	bot.send_message(message.from_user.id, "Ви зареєструвались, для продовження роботи привітайтесь")
 
 #/start
 @bot.message_handler(commands = ['start'])
@@ -101,6 +101,7 @@ def get_text_messages(message):
 		markup.add(item1,item2)
 		bot.send_message(message.from_user.id, 'Бажаєте пройти опитувальник?', reply_markup = markup)
 		bot.register_next_step_handler(message,questions)
+
 #Опитувальник
 def questions(message):
 	if message.text == 'Так':
@@ -124,7 +125,8 @@ def process_step(message):
 			bot.send_message(message.chat.id, 'Введіть пароль: ')
 			bot.register_next_step_handler(message,provider_step_1)
 		else: bot.send_message(message.chat.id, 'Вам доступна інформація лише для пацієнта.')
-
+	elif message.text == '/return':
+		welcome(message)
 def provider_step_1(message):
 	if message.text == dbase.pass_check(message.chat.id):
 		bot.send_message(message.chat.id, 'Остання перевірка: Скільки днів бажано консервативно лікувати пацієнта з гострим панкреатитом перед оперативним втручанням?')
@@ -150,6 +152,9 @@ def provider_step(message):
 	else:
 		bot.send_message(message.chat.id, 'Ви відповіли невірно, спробуйте ще раз', parse_mode = 'html')
 		bot.register_next_step_handler(message,provider_step)
+	if message.text == '/return':
+		welcome(message)
+
 #Інформація по патологіям
 def patology(message):
 	if message.text == 'Гострий апендицит':
@@ -198,7 +203,8 @@ def patology(message):
 		doc = open(r'C:\Project\medical_bot\Project_files\ПТР.txt', 'rb')
 		bot.send_document(message.chat.id, doc)
 		bot.register_next_step_handler(message,patology)
-
+	if message.text == '/return':
+		welcome(message)
 #Гілка пацієнта
 def patient_step(message):
 	if message.text == 'Добре':
@@ -214,7 +220,8 @@ def patient_step(message):
 	else:
 		bot.send_message(message.chat.id, 'Варіанти відповідей: Добре або Погано')
 		bot.register_next_step_handler(message,patient_step)
-
+	if message.text == '/return':
+		welcome(message)
 #Симптоми з кнопками їх диференціації
 def symptoms(message):
 	if message.text == 'Біль в животі':
@@ -236,20 +243,26 @@ def symptoms(message):
 		bot.register_next_step_handler(message,vomiting)
 	elif message.text == 'Лихоманка':
 		bot.send_message(message.chat.id, 'Поміряйте температуру, якщо > 37.8 - показані антипіретики. Якщо наявні симптоми COVID-19 зателефонуйте сімейному лікарю. Якщо відчуваєте задишку показана КТ ОГК')
+	if message.text == '/return':
+		welcome(message)
 #Диференціація болю
 def aches(message):
 	if message.text in ['Навколо пупка',"В ділянці шлунка","У правій здухвинній ділянці","У правому підребер'ї"]:
 		bot.send_message(message.chat.id, '1. Прийміть спазмолітик (не анальгетик, погіршить діагностику);\n2. Сконтактуйте з сімейним лікарем;\n3. Показані УЗД ОЧП, ФГДС')
+	if message.text == '/return':
+		welcome(message)
 #Диференціація блювоти
 def vomiting(message):
 	if message.text in ["Одноразова, приносить полегшення", "Одноразова, не приносить полегшення", "Багаторазова, не приносить полегшення"]:
 		bot.send_message(message.chat.id, '1. Прийміть спазмолітик, метоклопрамід;\n2. Сконтактуйте з сімейним лікарем;\n3. Показані УЗД ОЧП, ФГДС')
+	if message.text == '/return':
+		welcome(message)
 def start_process():
 	p1 = Process(target = P_schedule.start_schedule, args =()).start()
 
 class P_schedule():
 	def start_schedule():
-		schedule.every().day.at("10:27").do(test_send_message)
+		schedule.every().day.at("10:00").do(test_send_message)
 
 		while True:
 			schedule.run_pending()
