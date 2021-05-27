@@ -92,9 +92,9 @@ def get_text_messages(message):
 		bot.send_message(message.from_user.id, random.choice(data['Responses']['Goodbye_bot']))
 	elif message.text in data['Corpus']['Gratitude']:
 		bot.send_message(message.from_user.id, random.choice(data['Responses']['Gratitude_bot']))
-	if message.text == 'Добре':
+	if message.text in data['Corpus']['Well']:
 		bot.send_message(message.from_user.id, 'Радий це чути, зустрінемось наступного дня')
-	elif message.text == 'Погано':
+	elif message.text in data['Corpus']['Bad']:
 		markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
 		item1 = types.KeyboardButton("Так")
 		item2 = types.KeyboardButton("Ні")
@@ -205,11 +205,12 @@ def patology(message):
 		bot.register_next_step_handler(message,patology)
 	if message.text == '/return':
 		welcome(message)
+
 #Гілка пацієнта
 def patient_step(message):
-	if message.text == 'Добре':
+	if message.text in data['Corpus']['Well']:
 		bot.send_message(message.chat.id, 'Радий чути це')
-	elif message.text == 'Погано':
+	elif message.text in data['Corpus']['Bad']:
 		markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
 		item1 = types.KeyboardButton("Біль в животі")
 		item2 = types.KeyboardButton("Блювота")
@@ -218,10 +219,11 @@ def patient_step(message):
 		bot.send_message(message.chat.id, 'Шкода це чути. Що вас турбує?',reply_markup = markup)
 		bot.register_next_step_handler(message,symptoms)
 	else:
-		bot.send_message(message.chat.id, 'Варіанти відповідей: Добре або Погано')
+		bot.send_message(message.chat.id, 'Перефразуйте, будь ласка')
 		bot.register_next_step_handler(message,patient_step)
 	if message.text == '/return':
 		welcome(message)
+
 #Симптоми з кнопками їх диференціації
 def symptoms(message):
 	if message.text == 'Біль в животі':
