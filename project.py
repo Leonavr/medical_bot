@@ -7,6 +7,8 @@ from db import SQLighter
 import json
 import schedule
 import time
+import random
+import os
 from multiprocessing import *
 
 
@@ -44,8 +46,9 @@ def step_reg_1 (message):
 			markup.add(item1,item2)
 			bot.send_message(message.from_user.id, "Введіть роль ", reply_markup = markup)
 			bot.register_next_step_handler(message,step_reg_2)
-		else: bot.send_message(message.from_user.id, "Ви вже зареєстровані ")
-
+		else: 
+			bot.send_message(message.from_user.id, "Ви вже зареєстровані ")
+			bot.register_next_step_handler(message,first_step)
 def step_reg_2 (message):
 	dbase.add_role(message.chat.id, message.text)
 	bot.send_message(message.from_user.id, "Введіть логін ")
@@ -138,6 +141,20 @@ def provider_step(message):
 	bot.send_sticker(message.chat.id, sti)
 	if message.text == '14':
 		markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=False)
+		item1 = types.KeyboardButton("Перша допомога")
+		item2 = types.KeyboardButton("Протоколи операцій")
+		markup.add(item1,item2)
+		bot.send_message(message.chat.id, 'Вітаю в лікарській базі!', reply_markup = markup)
+		bot.register_next_step_handler(message,provider_step_urgent)
+	else:
+		bot.send_message(message.chat.id, 'Ви відповіли невірно, спробуйте ще раз', parse_mode = 'html')
+		bot.register_next_step_handler(message,provider_step)
+	if message.text == '/return':
+		welcome(message)
+
+def provider_step_urgent(message):
+	if message.text == 'Перша допомога':
+		markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=False)
 		item1 = types.KeyboardButton("Гострий апендицит")
 		item2 = types.KeyboardButton("Гострий панкреатит")
 		item3 = types.KeyboardButton("Гострий холецистит")
@@ -149,13 +166,30 @@ def provider_step(message):
 		markup.add(item1,item2,item3,item4,item5,item6,item7,item8)
 		bot.send_message(message.chat.id, 'Вітаю в лікарській базі, виберіть патологію: ', reply_markup = markup)
 		bot.register_next_step_handler(message,patology)
-	else:
-		bot.send_message(message.chat.id, 'Ви відповіли невірно, спробуйте ще раз', parse_mode = 'html')
-		bot.register_next_step_handler(message,provider_step)
+	elif message.text == 'Протоколи операцій':
+		markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=False)
+		item1 = types.KeyboardButton("Рандомний протокол")
+		markup.add(item1)
+		#protocols = open(random.choice(os.listdir('Протоколи для бота')), 'rb')
+		bot.send_message(message.chat.id, 'Натиснувши на кнопку, ви отримаєте випадковий протокол ', reply_markup = markup)
+		#bot.send_document(message.from_user.id, protocols, reply_markup = markup)
+		bot.register_next_step_handler(message,protocols)
 	if message.text == '/return':
 		welcome(message)
 
-#Інформація по патологіям
+#Протоколи операцій
+def protocols(message):
+	if message.text == 'Рандомний протокол':
+		directory = 'C:\Project\medical_bot\Протоколи для бота'
+		all_files_in_directory = os.listdir(directory) 
+		protocol = random.choice(all_files_in_directory)
+		doc = open(directory + '/' + protocol, 'rb')
+		bot.send_document(message.from_user.id, doc) #Надсилаємо рандомний протокол з папки
+		bot.register_next_step_handler(message,protocols)
+	if message.text == '/return':
+		welcome(message)
+
+#Інформація по патологіям (Перша допомога)
 def patology(message):
 	if message.text == 'Гострий апендицит':
 		doc = open(r'C:\Project\medical_bot\Project_files\ГА.txt', 'r',encoding = 'utf-8')
