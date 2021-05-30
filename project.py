@@ -20,11 +20,9 @@ with open("intents.json", "r", encoding = 'utf-8') as read_file:
 logger = telebot.logging
 logger.basicConfig(filename='history.log', level=logging.DEBUG, encoding='utf-8')
 
-
 #DB
 dbase = SQLighter('db1.db')
-
-
+#Config
 bot = telebot.TeleBot('1745020237:AAGYnbRhHf8ZnImx1nYqyHq8j0hkELADuno', parse_mode='html')
 
 #/reg - реєстрація користувача в базі даних
@@ -49,6 +47,7 @@ def step_reg_1 (message):
 		else: 
 			bot.send_message(message.from_user.id, "Ви вже зареєстровані ")
 			bot.register_next_step_handler(message,first_step)
+
 def step_reg_2 (message):
 	dbase.add_role(message.chat.id, message.text)
 	bot.send_message(message.from_user.id, "Введіть логін ")
@@ -83,14 +82,22 @@ def first_step (message):
 
 #Прийом тексту незалежно від рулів
 @bot.message_handler(content_types=['text'])
-def get_text_messages(message):
+def get_text_messages(message): #Розділення сценаріїв щодо ролі
 	if message.text in data['Corpus']['Greetings']:
-		markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-		item1 = types.KeyboardButton("Для пацієнта")
-		item2 = types.KeyboardButton("Для лікаря")
-		markup.add(item1,item2)
-		bot.send_message(message.from_user.id, "Доброго дня, виберіть, яку інформацію Ви бажаєте отримати", reply_markup = markup)
-		bot.register_next_step_handler(message,process_step)
+		if 'Лікар' in dbase.user_provider(message.chat.id):
+			markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+			item = types.KeyboardButton("Інформаційна база")
+			markup.add(item)
+			bot.send_message(message.chat.id, 'Вітаю! Для отримання інформації натисніть кнопку нижче. ', reply_markup = markup)
+			bot.register_next_step_handler(message,process_step)
+		elif 'Пацієнт' in dbase.user_provider(message.chat.id):
+			markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+			item = types.KeyboardButton("Моніторинг")
+			markup.add(item)
+			bot.send_message(message.from_user.id, "Моніторинг", reply_markup = markup)
+			bot.register_next_step_handler(message,process_step)
+		else: #Подумати, що писати незареєстрованим користувачам!
+			bot.send_message(message.from_user.id, "Вітаю! Для отримання щоденного моніторингу стану здоров'я або доступу до інформаційної бази потрібно зареєструватись. Для реєстрації напишіть '/reg'")
 	elif message.text in data['Corpus']['Goodbye']:
 		bot.send_message(message.from_user.id, random.choice(data['Responses']['Goodbye_bot']))
 	elif message.text in data['Corpus']['Gratitude']:
@@ -120,10 +127,10 @@ def questions(message):
 
 #Крок після визначення ролі
 def process_step(message):
-	if message.text == 'Для пацієнта':
+	if message.text == 'Моніторинг':
 		bot.send_message(message.chat.id, 'Як ви себе почуваєте?')
 		bot.register_next_step_handler(message,patient_step)
-	elif message.text == 'Для лікаря':
+	elif message.text == 'Інформаційна база':
 		if 'Лікар' in dbase.user_provider(message.chat.id):
 			bot.send_message(message.chat.id, 'Введіть пароль: ')
 			bot.register_next_step_handler(message,provider_step_1)
@@ -293,18 +300,16 @@ def vomiting(message):
 		bot.send_message(message.chat.id, '1. Прийміть спазмолітик, метоклопрамід;\n2. Сконтактуйте з сімейним лікарем;\n3. Показані УЗД ОЧП, ФГДС')
 	if message.text == '/return':
 		welcome(message)
+
+#Заплановане повідомлення
 def start_process():
 	p1 = Process(target = P_schedule.start_schedule, args =()).start()
-
 class P_schedule():
 	def start_schedule():
 		schedule.every().day.at("10:00").do(test_send_message)
-
 		while True:
 			schedule.run_pending()
 			time.sleep(1)
-
-
 def test_send_message():
 	text = 'Доброго ранку, як Ви себе почуваєте?'
 	bot.send_message(dbase.user_id('Пацієнт'), text)
