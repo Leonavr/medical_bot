@@ -39,5 +39,8 @@ class SQLighter:
         a = self.cursor.execute("SELECT user_id FROM user_message WHERE role = ?", (role, )).fetchall()
         res = a[0][0]
         return res
+    def set_msg(self,message,user_id):
+        self.cursor.execute("UPDATE user_message SET msg = ? WHERE user_id = ?",(message,user_id ))
+        self.connection.commit()
     def close(self):
         self.connection.close()
