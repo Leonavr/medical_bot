@@ -25,7 +25,7 @@ logger.basicConfig(filename='history.log', level=logging.DEBUG, encoding='utf-8'
 #DB
 dbase = SQLighter('db1.db')
 #Config
-bot = telebot.TeleBot('1745020237:AAGYnbRhHf8ZnImx1nYqyHq8j0hkELADuno', parse_mode='html')
+bot = telebot.TeleBot('Config', parse_mode='html')
 
 #/reg - реєстрація користувача в базі даних
 @bot.message_handler(commands = ['reg'])
