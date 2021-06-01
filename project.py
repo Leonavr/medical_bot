@@ -7,11 +7,13 @@ from db import SQLighter
 import json
 import schedule
 import time
+import datetime
 import random
 import os
+import re
 from multiprocessing import *
 daily = []
-
+now = datetime.datetime.now()
 
 with open("intents.json", "r", encoding = 'utf-8') as read_file:
     data = json.load(read_file)
@@ -50,7 +52,7 @@ def step_reg_1 (message):
 
 def step_reg_2 (message):
 	dbase.add_role(message.chat.id, message.text)
-	bot.send_message(message.from_user.id, "Введіть логін ")
+	bot.send_message(message.from_user.id, "Введіть email ")
 	bot.register_next_step_handler(message,step_reg_3)
 
 def step_reg_3 (message):
@@ -102,7 +104,12 @@ def get_text_messages(message): #Розділення сценаріїв щод�
 	elif message.text in data['Corpus']['Gratitude']:
 		bot.send_message(message.from_user.id, random.choice(data['Responses']['Gratitude_bot']))
 	if message.text in data['Corpus']['Well']:
-		bot.send_message(message.from_user.id, 'Радий це чути, зустрінемось наступного дня')
+		markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+		item1 = types.KeyboardButton("Так")
+		item2 = types.KeyboardButton("Ні")
+		markup.add(item1,item2)
+		bot.send_message(message.from_user.id, 'Радий це чути. Бажаєте пройти опитувальник?', reply_markup = markup)
+		bot.register_next_step_handler(message,everyday_symptoms)
 		daily.append(message.text)
 	elif message.text in data['Corpus']['Bad']:
 		markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
@@ -294,11 +301,7 @@ def vomiting(message):
 #Щоденний опитувальник
 def everyday_symptoms(message):
 	if message.text == 'Так':
-		markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-		item1 = types.KeyboardButton("Так")
-		item2 = types.KeyboardButton("Ні")
-		markup.add(item1,item2)
-		bot.send_message(message.chat.id, 'Чи є у Вас висока температура?',reply_markup = markup)
+		bot.send_message(message.chat.id, 'Поміряйте, будь ласка, температуру і напишіть її.')
 		bot.register_next_step_handler(message,everyday_symptoms_1)
 		daily.append(message.text)
 	elif message.text == 'Ні':
@@ -308,24 +311,16 @@ def everyday_symptoms(message):
 		markup.add(item1,item2)
 		bot.send_message(message.chat.id, "Не ризикуйте своїм здоров'ям, при наявності симптомів запалення (лихоманка, почервоніння навколо рани, гнійні виділення з рани) зверніться до лікаря!")
 		bot.register_next_step_handler(message,everyday_symptoms_1)
-		a = f'Пацієнт відмовився від опитування."'
+		a = f'Пацієнт відмовився від опитування.'
 		dbase.set_msg(a,message.chat.id)
 
 def everyday_symptoms_1(message):
-	if message.text == 'Ні':
+	if message.text == re.match(r'\d{2}\.\d', message.text).group(0):
 		markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
 		item1 = types.KeyboardButton("Так")
 		item2 = types.KeyboardButton("Ні")
 		markup.add(item1,item2)
-		bot.send_message(message.chat.id, 'Радий це чути, чи є почервоніння навколо рани?',reply_markup = markup)
-		bot.register_next_step_handler(message,everyday_symptoms_2)
-		daily.append(message.text)
-	elif message.text == 'Так':
-		markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-		item1 = types.KeyboardButton("Так")
-		item2 = types.KeyboardButton("Ні")
-		markup.add(item1,item2)
-		bot.send_message(message.chat.id, "Чи є почервоніння навколо рани?",reply_markup = markup)
+		bot.send_message(message.chat.id, 'Чи є почервоніння навколо рани?',reply_markup = markup)
 		bot.register_next_step_handler(message,everyday_symptoms_2)
 		daily.append(message.text)
 
@@ -347,34 +342,46 @@ def everyday_symptoms_2(message):
 		daily.append(message.text)
 		bot.register_next_step_handler(message,everyday_symptoms_3)
 
-#В кінці опитувальника, дані будуть вноситись в щоденник, в майбутньому надсилати лікарю стан його пацієнта
+#В кінці опитувальника, дані будуть вноситись в щоденник і через 5 хвилин надсилатись лікарю
 def everyday_symptoms_3(message):
 	if message.text == 'Ні':
 		bot.send_message(message.chat.id, 'На сьогодні все, ваш щоденник буде надіслано Вашому лікарю')
 		bot.register_next_step_handler(message,symptoms)
 		daily.append(message.text)
-		a = f'Пацієнт почуває себе {daily[1]}, лихоманка - "{daily[2]}", наявність почервоніння навколо рани - "{daily[3]}", наявність виділень з рани - "{daily[4]}"'
-		dbase.set_msg(a,message.chat.id)
-	
+		if daily[0] in data['Corpus']['Well']:
+			a = f'{now.strftime("%d-%m-%Y")} - {message.from_user.first_name} {message.from_user.last_name} - Пацієнт почуває себе задовільно, температура - "{daily[2]}°C", наявність почервоніння навколо рани - "{daily[3]}", наявність виділень з рани - "{daily[4]}"'
+			dbase.set_msg(a,message.chat.id)
+		else:
+			a = f'{now.strftime("%d-%m-%Y")} - {message.from_user.first_name} {message.from_user.last_name} - Загальний стан хворого середньої важкості, температура - "{daily[2]}°C", наявність почервоніння навколо рани - "{daily[3]}", наявність виділень з рани - "{daily[4]}"'
+			dbase.set_msg(a,message.chat.id)
+		
 	elif message.text == 'Так':
 		bot.send_message(message.chat.id, "На сьогодні все, ваш щоденник буде надіслано Вашому лікарю")
 		daily.append(message.text)
-		a = f'Пацієнт почуває себе {daily[0]}, лихоманка - "{daily[2]}", наявність почервоніння навколо рани - "{daily[3]}", наявність виділень з рани - "{daily[4]}"'
-		dbase.set_msg(a,message.chat.id)
+		if daily[0] in data['Corpus']['Well']:
+			a = f'{now.strftime("%d-%m-%Y")} - {message.from_user.first_name} {message.from_user.last_name} - Пацієнт почуває себе задовільно, температура - "{daily[2]}°C", наявність почервоніння навколо рани - "{daily[3]}", наявність виділень з рани - "{daily[4]}"'
+			dbase.set_msg(a,message.chat.id)
+		else:
+			a = f'{now.strftime("%d-%m-%Y")} - {message.from_user.first_name} {message.from_user.last_name} - Загальний стан хворого середньої важкості, температура - "{daily[2]}°C", наявність почервоніння навколо рани - "{daily[3]}", наявність виділень з рани - "{daily[4]}"'
+			dbase.set_msg(a,message.chat.id)
+	
 
 #Заплановане повідомлення
 def start_process():
 	p1 = Process(target = P_schedule.start_schedule, args =()).start()
 class P_schedule():
 	def start_schedule():
-		schedule.every().day.at("10:00").do(test_send_message)
+		schedule.every().day.at("10:00").do(test_send_message) #Заплановане повідомлення пацієнту
+		schedule.every().day.at("10:10").do(test_prov_message) #Заплановане повідомлення пацієнту
 		while True:
 			schedule.run_pending()
 			time.sleep(1)
 def test_send_message():
 	text = "Доброго ранку, у зв'язку з раннім післяопераційним періодом, рекомендовано щоденний моніторинг Вашого здоров'я. Як ви себе почуваєте?"
 	bot.send_message(dbase.user_id('Пацієнт'), text)
-	
+def test_prov_message():
+	bot.send_message(dbase.user_id('Лікар'), dbase.msg_to_prov())
+
 if __name__ == '__main__':
 	start_process()
 	try:
