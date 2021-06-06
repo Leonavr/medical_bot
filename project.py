@@ -31,6 +31,7 @@ dbase = SQLighter('db1.db')
 #Config
 bot = telebot.TeleBot(config.TOKEN, parse_mode='html')
 
+
 #/reg - реєстрація користувача в базі даних
 @bot.message_handler(commands = ['reg'])
 def registr (message):
