@@ -385,8 +385,8 @@ def start_process():
 	p1 = Process(target = P_schedule.start_schedule, args =()).start()
 class P_schedule():
 	def start_schedule():
-		schedule.every().day.at("13:56").do(test_send_message) #Заплановане повідомлення пацієнту
-		schedule.every().day.at("13:57").do(test_prov_message) #Заплановане повідомлення пацієнту
+		schedule.every().day.at("10:00").do(test_send_message) #Заплановане повідомлення пацієнту
+		schedule.every().day.at("10:05").do(test_prov_message) #Заплановане повідомлення пацієнту
 		while True:
 			schedule.run_pending()
 			time.sleep(1)
