@@ -1,17 +1,21 @@
-from typing import Text
-import telebot
-from telebot import types
+import config
 import random
 import logging
-from db import SQLighter
-import json
-import schedule
 import time
+import json
 import datetime
 import random
 import os
 import re
+import hashlib
+from typing import Text
+import telebot
+from telebot import types
+from db import SQLighter
+import schedule
 from multiprocessing import *
+
+
 daily = []
 now = datetime.datetime.now()
 
@@ -25,7 +29,7 @@ logger.basicConfig(filename='history.log', level=logging.DEBUG, encoding='utf-8'
 #DB
 dbase = SQLighter('db1.db')
 #Config
-bot = telebot.TeleBot('1745020237:AAGYnbRhHf8ZnImx1nYqyHq8j0hkELADuno', parse_mode='html')
+bot = telebot.TeleBot(config.TOKEN, parse_mode='html')
 
 #/reg - реєстрація користувача в базі даних
 @bot.message_handler(commands = ['reg'])
@@ -57,11 +61,17 @@ def step_reg_2 (message):
 
 def step_reg_3 (message):
 	dbase.add_login(message.text)
-	bot.send_message(message.from_user.id, "Введіть пароль ")
-	bot.register_next_step_handler(message,step_reg_4)
+	if 'Лікар' in dbase.user_provider(message.chat.id):
+		bot.send_message(message.from_user.id, "Введіть пароль ")
+		bot.register_next_step_handler(message,step_reg_4)
+	else:
+		bot.send_message(message.from_user.id, "Ви зареєструвались, для продовження роботи привітайтесь")
 
+salt = os.urandom(32)
 def step_reg_4 (message):
-	dbase.add_password(message.text)
+	password = message.text
+	key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
+	dbase.add_password(key)
 	bot.send_message(message.from_user.id, "Ви зареєструвались, для продовження роботи привітайтесь")
 
 #/start
@@ -97,7 +107,7 @@ def get_text_messages(message): #Розділення сценаріїв щод�
 			markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
 			item = types.KeyboardButton("Моніторинг")
 			markup.add(item)
-			bot.send_message(message.from_user.id, "Вітаю! Для початку опитування натисніть кнопку нижчеі", reply_markup = markup)
+			bot.send_message(message.from_user.id, "Вітаю! Для початку опитування натисніть кнопку нижче.", reply_markup = markup)
 			bot.register_next_step_handler(message,process_step)
 	elif message.text in data['Corpus']['Goodbye']:
 		bot.send_message(message.from_user.id, random.choice(data['Responses']['Goodbye_bot']))
@@ -135,7 +145,10 @@ def process_step(message):
 	elif message.text == '/return':
 		welcome(message)
 def provider_step_1(message):
-	if message.text == dbase.pass_check(message.chat.id):
+	new_pass = hashlib.pbkdf2_hmac('sha256',message.text.encode('utf-8'), salt, 100000)
+	print(new_pass)
+	print(dbase.pass_check(message.chat.id))
+	if new_pass == dbase.pass_check(message.chat.id):
 		bot.send_message(message.chat.id, 'Остання перевірка: Скільки днів бажано консервативно лікувати пацієнта з гострим панкреатитом перед оперативним втручанням?')
 		bot.register_next_step_handler(message,provider_step)
 
@@ -315,7 +328,7 @@ def everyday_symptoms(message):
 		dbase.set_msg(a,message.chat.id)
 
 def everyday_symptoms_1(message):
-	if message.text == re.match(r'\d{2}\.\d', message.text).group(0):
+	if message.text == re.match(r'\d{2}\.\d*', message.text).group(0):
 		markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
 		item1 = types.KeyboardButton("Так")
 		item2 = types.KeyboardButton("Ні")
@@ -371,8 +384,8 @@ def start_process():
 	p1 = Process(target = P_schedule.start_schedule, args =()).start()
 class P_schedule():
 	def start_schedule():
-		schedule.every().day.at("10:00").do(test_send_message) #Заплановане повідомлення пацієнту
-		schedule.every().day.at("10:10").do(test_prov_message) #Заплановане повідомлення пацієнту
+		schedule.every().day.at("13:56").do(test_send_message) #Заплановане повідомлення пацієнту
+		schedule.every().day.at("13:57").do(test_prov_message) #Заплановане повідомлення пацієнту
 		while True:
 			schedule.run_pending()
 			time.sleep(1)
@@ -380,8 +393,24 @@ def test_send_message():
 	text = "Доброго ранку, у зв'язку з раннім післяопераційним періодом, рекомендовано щоденний моніторинг Вашого здоров'я. Як ви себе почуваєте?"
 	bot.send_message(dbase.user_id('Пацієнт'), text)
 def test_prov_message():
-	bot.send_message(dbase.user_id('Лікар'), dbase.msg_to_prov())
+	msg = dbase.msg_to_prov()
+	for i in msg:
+		for j in i:
+			bot.send_message(dbase.user_id('Лікар'), i)
 
+@bot.message_handler(content_types=['photo'])
+def handle_docs_photo(message):
+    try:
+		
+        file_info = bot.get_file(message.photo[len(message.photo)-1].file_id)
+        downloaded_file = bot.download_file(file_info.file_path)
+        src= file_info.file_path
+        bot.send_photo(dbase.user_id('Лікар'), downloaded_file, f'Фото рани пацієнта - John Doe')
+        bot.reply_to(message,"Фото надіслано лікарю") 
+
+    except Exception as e:
+        bot.reply_to(message,e )
+	
 if __name__ == '__main__':
 	start_process()
 	try:
