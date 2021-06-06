@@ -36,10 +36,9 @@ bot = telebot.TeleBot(config.TOKEN, parse_mode='html')
 @bot.message_handler(commands = ['reg'])
 def registr (message):
 	markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-	item1 = types.KeyboardButton("Зареєстрований")
-	item2 = types.KeyboardButton("Зареєструватись")
-	markup.add(item1,item2)
-	bot.send_message(message.chat.id, "Вітаю, {0.first_name}!\nВи можете зареєструватись для отримання інформації з бази даних!".format(message.from_user), reply_markup = markup)
+	item = types.KeyboardButton("Зареєструватись")
+	markup.add(item)
+	bot.send_message(message.chat.id, "Вітаю, {0.first_name}!\nНатисніть кнопку нижче щоб розпочати реєстрацію.".format(message.from_user), reply_markup = markup)
 	bot.register_next_step_handler(message,step_reg_1)
 
 def step_reg_1 (message):
@@ -54,12 +53,7 @@ def step_reg_1 (message):
 		else: 
 			bot.send_message(message.from_user.id, "Ви вже зареєстровані, для початку роботи привітайтесь. ")
 			bot.register_next_step_handler(message,first_step)
-	if message.text == "Зареєстрований":
-		if (not dbase.user_exist(message.chat.id)):
-			bot.send_message(message.from_user.id, "Ви не зареєстровані. ", reply_markup = markup)
-		else:
-			bot.send_message(message.from_user.id, "Для початку роботи привітайтесь. ")
-			bot.register_next_step_handler(message,first_step)
+
 
 def step_reg_2 (message):
 	dbase.add_role(message.chat.id, message.text)
