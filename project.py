@@ -52,7 +52,13 @@ def step_reg_1 (message):
 			bot.send_message(message.from_user.id, "Введіть роль ", reply_markup = markup)
 			bot.register_next_step_handler(message,step_reg_2)
 		else: 
-			bot.send_message(message.from_user.id, "Ви вже зареєстровані ")
+			bot.send_message(message.from_user.id, "Ви вже зареєстровані, для початку роботи привітайтесь. ")
+			bot.register_next_step_handler(message,first_step)
+	if message.text == "Зареєстрований":
+		if (not dbase.user_exist(message.chat.id)):
+			bot.send_message(message.from_user.id, "Ви не зареєстровані. ", reply_markup = markup)
+		else:
+			bot.send_message(message.from_user.id, "Для початку роботи привітайтесь. ")
 			bot.register_next_step_handler(message,first_step)
 
 def step_reg_2 (message):
@@ -401,16 +407,20 @@ def test_prov_message():
 
 @bot.message_handler(content_types=['photo'])
 def handle_docs_photo(message):
-    try:
+	try:
 		
-        file_info = bot.get_file(message.photo[len(message.photo)-1].file_id)
-        downloaded_file = bot.download_file(file_info.file_path)
-        src= file_info.file_path
-        bot.send_photo(dbase.user_id('Лікар'), downloaded_file, f'Фото рани пацієнта - John Doe')
-        bot.reply_to(message,"Фото надіслано лікарю") 
+		file_info = bot.get_file(message.photo[len(message.photo)-1].file_id)
+		downloaded_file = bot.download_file(file_info.file_path)
+		src= file_info.file_path
+		photo = dbase.user_id('Лікар')
+		
+		for i in photo:
+			for j in i:
+				bot.send_photo(j, downloaded_file, f'Фото рани пацієнта - John Doe')
+		bot.reply_to(message,"Фото надіслано лікарю") 
 
-    except Exception as e:
-        bot.reply_to(message,e )
+	except Exception as e:
+		bot.reply_to(message,e )
 	
 if __name__ == '__main__':
 	start_process()
